@@ -1,8 +1,8 @@
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++17
 
-SRC = coord.cpp ensemble.cpp
-OBJ = coord.o ensemble.o
+SRC = coord.cpp ensemble.cpp animal.cpp
+OBJ = coord.o ensemble.o animal.o
 
 main: main.cpp $(OBJ)
 	$(CXX) $(CXXFLAGS) -o main main.cpp $(SRC)
