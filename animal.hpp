@@ -3,29 +3,38 @@
 
 #include "coord.hpp"
 #include <iostream>
-#include <stdexcept>
 
 using namespace std;
 
-enum Espece {
-    Lapin,
-    Renard
-};
+enum class Espece { Lapin, Renard };
 
 class Animal {
-	private:
-	    int id;
-	    Coord position;
-	    Espece espece;
-	
-	public:
-	    Animal(int id, const Coord &position, Espece espece);
-	
-	    int getId() const;
-	    Coord getPosition() const;
-	    Espece getEspece() const;
-	
-	    void deplacer(const Coord &nouvellePos);
+private:
+    int id;
+    Espece espece;
+    Coord position;
+    int faim; // Niveau de faim
+
+public:
+    // === Constructeur ===
+    Animal(int id, Espece espece, Coord position);
+
+    // === Accesseurs ===
+    int getId() const;
+    Coord getCoord() const;
+    void setCoord(Coord c);
+    Espece getEspece() const;
+
+    // === Predicats ===
+    bool meurt() const;
+    bool seReproduit(int nbVoisinsVides) const;
+
+    // === Modificateurs ===
+    void mange(); // Remet la faim à 0
+    void jeune(); // Incrémente la faim
+
+    // === Affichage ===
+    void affiche(ostream& os) const;
 };
 
 #endif

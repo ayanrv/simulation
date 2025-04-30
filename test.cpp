@@ -3,6 +3,7 @@
 
 #include "coord.hpp"
 #include "ensemble.hpp"
+#include "animal.hpp"
 
 using namespace std;
 
@@ -113,4 +114,47 @@ TEST_CASE("Ensemble: voisines") {
         CHECK(v2.cardinal() <= 8);
         CHECK(v2.cardinal() >= 1);
     }
+}
+
+// === Tests Animal ===
+TEST_CASE("Animal: creation et affichage") {
+    Animal a1(1, Espece::Lapin, Coord(2, 3));
+    CHECK(a1.getId() == 1);
+    CHECK(a1.getEspece() == Espece::Lapin);
+    CHECK(a1.getCoord() == Coord(2, 3));
+}
+
+TEST_CASE("Animal: setCoord") {
+    Animal a2(2, Espece::Renard, Coord(0, 0));
+    a2.setCoord(Coord(1, 1));
+    CHECK(a2.getCoord() == Coord(1, 1));
+}
+
+TEST_CASE("Animal: renard meurt apres 5 jeunes") {
+    Animal r(3, Espece::Renard, Coord(4, 4));
+    for (int i = 0; i < 5; ++i)
+        r.jeune();
+    CHECK(r.meurt() == true);
+}
+
+TEST_CASE("Animal: renard mange et ne meurt pas") {
+    Animal r(4, Espece::Renard, Coord(1, 1));
+    for (int i = 0; i < 4; ++i)
+        r.jeune();
+    CHECK(r.meurt() == false);
+    r.mange();
+    CHECK(r.meurt() == false);
+}
+
+TEST_CASE("Animal: lapin ne meurt jamais") {
+    Animal l(5, Espece::Lapin, Coord(6, 6));
+    for (int i = 0; i < 10; ++i)
+        l.jeune(); // should do nothing
+    CHECK(l.meurt() == false);
+}
+
+TEST_CASE("Animal: reproduction") {
+    Animal l(6, Espece::Lapin, Coord(3, 3));
+    CHECK(l.seReproduit(2) == true);
+    CHECK(l.seReproduit(0) == false);
 }

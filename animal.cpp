@@ -1,37 +1,51 @@
 #include "animal.hpp"
-#include "doctest.h"
 
 using namespace std;
 
-Animal::Animal(int id, const Coord &position, Espece espece): id(id), position(position), espece(espece) {}
+// === Constructeur ===
+Animal::Animal(int id, Espece espece, Coord position)
+    : id(id), espece(espece), position(position), faim(0) {}
 
+// === Accesseurs ===
 int Animal::getId() const {
     return id;
 }
 
-Coord Animal::getPosition() const {
+Coord Animal::getCoord() const {
     return position;
+}
+
+void Animal::setCoord(Coord c) {
+    position = c;
 }
 
 Espece Animal::getEspece() const {
     return espece;
 }
 
-void Animal::deplacer(const Coord &nouvellePos) {
-    position = nouvellePos;
-	
+// === Predicats ===
+bool Animal::meurt() const {
+    return espece == Espece::Renard && faim >= 5;
 }
 
-TEST_CASE("Test de la classe Animal") {
-    Coord posInitiale(5, 5);
-    // Creation d'un Lapin avec id = 1
-    Animal a(1, posInitiale, Lapin);
-    CHECK(a.getId() == 1);
-    CHECK(a.getPosition() == posInitiale);
-    CHECK(a.getEspece() == Lapin);
+bool Animal::seReproduit(int nbVoisinsVides) const {
+    return nbVoisinsVides >= 2;
+}
 
-    // Deplacement
-    Coord posNouvelle(6, 7);
-    a.deplacer(posNouvelle);
-    CHECK(a.getPosition() == posNouvelle);
+// === Modificateurs ===
+void Animal::mange() {
+    faim = 0;
+}
+
+void Animal::jeune() {
+    if (espece == Espece::Renard)
+        faim++;
+}
+
+// === Affichage ===
+void Animal::affiche(ostream& os) const {
+    os << "[id=" << id
+       << ", espece=" << (espece == Espece::Lapin ? "Lapin" : "Renard")
+       << ", pos=" << position.toString()
+       << ", faim=" << faim << "]";
 }
