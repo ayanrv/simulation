@@ -4,7 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 
-const int MAXCARD = 100; // taille maximale d'un ensemble
+const int MAXCARD = 1600; // taille maximale d'un ensemble
 
 class Ensemble {
 private:
@@ -24,6 +24,9 @@ public:
     // for population and tests
     bool contient(int val) const;
     void retire(int val);
+
+    //for jeu
+    int get(int i) const;
 
     void affiche(std::ostream& os) const; // affiche les elements significatifs
 

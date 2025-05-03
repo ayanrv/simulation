@@ -24,13 +24,15 @@ public:
     Coord getCoord() const;
     void setCoord(Coord c);
     Espece getEspece() const;
+    //to check conditions for reproduction (Renards)
+    int getFaim() const;
 
     // === Predicats ===
-    bool meurt() const;
-    bool seReproduit(int nbVoisinsVides) const;
+    bool meurt(int maxFaim) const;
+    bool seReproduit(int nbVoisinsVides, int seuil) const;
 
     // === Modificateurs ===
-    void mange(); // Remet la faim à 0
+    void mange(int foodGain, int maxFaim); // Remet la faim à 0
     void jeune(); // Incrémente la faim
 
     // === Affichage ===

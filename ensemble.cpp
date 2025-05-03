@@ -87,6 +87,13 @@ void Ensemble::retire(int val) {
     }
 }
 
+int Ensemble::get(int i) const {
+    if (i < 0 || i >= card) {
+        throw out_of_range("Index hors limites dans Ensemble::get()");
+    }
+    return t[i];
+}
+
 
 void Ensemble::affiche(ostream& os) const {
     os << "{ ";

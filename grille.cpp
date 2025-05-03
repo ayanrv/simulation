@@ -34,18 +34,23 @@ void Grille::videCase(const Coord& c) {
 
 // Affiche la grille sur la sortie donnee
 // Affiche un L pour un lapin, un R pour un renard, et . pour une case vide
+// Color terminal output (ANSI escape codes)
 void Grille::affiche(const Population& pop, ostream& os) const {
     for (int i = 0; i < TAILLEGRILLE; ++i) {
         for (int j = 0; j < TAILLEGRILLE; ++j) {
             int id = grille[i][j];
+
             if (id == VIDE) {
-                os << " ."; //c'est plus lisible que 0
+                os << " \033[37m.\033[0m";  // white
             } else {
                 try {
                     Animal a = pop.get(id);
-                    os << (a.getEspece() == Espece::Lapin ? " L" : " R");
+                    if (a.getEspece() == Espece::Lapin)
+                        os << " \033[32mL\033[0m";  // green
+                    else
+                        os << " \033[31mR\033[0m";  // red
                 } catch (...) {
-                    os << " ?";
+                    os << " \033[33m?\033[0m"; // yellow for error
                 }
             }
         }

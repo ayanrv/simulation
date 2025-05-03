@@ -23,18 +23,25 @@ Espece Animal::getEspece() const {
     return espece;
 }
 
-// === Predicats ===
-bool Animal::meurt() const {
-    return espece == Espece::Renard && faim >= 5;
+int Animal::getFaim() const {
+    return faim;
 }
 
-bool Animal::seReproduit(int nbVoisinsVides) const {
-    return nbVoisinsVides >= 2;
+
+// === Predicats ===
+bool Animal::meurt(int maxFaim) const {
+    return espece == Espece::Renard && faim >= maxFaim;
+}
+
+bool Animal::seReproduit(int nbVoisinsVides, int seuil) const {
+    return nbVoisinsVides >= seuil;
 }
 
 // === Modificateurs ===
-void Animal::mange() {
-    faim = 0;
+void Animal::mange(int foodGain, int maxFaim) {
+    faim -= foodGain;
+    if (faim < 0) faim = 0;
+    if (faim > maxFaim) faim = maxFaim;
 }
 
 void Animal::jeune() {
