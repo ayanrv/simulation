@@ -1,0 +1,5 @@
+To create animation video (gif):
+ffmpeg -framerate 5 -i frames/grille%04d.ppm animation.mp4
+
+To convert to png:
+convert frames/grille0000.ppm grille0000.png

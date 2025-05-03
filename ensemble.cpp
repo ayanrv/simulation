@@ -33,8 +33,21 @@ void Ensemble::ajoute(int val) {
 int Ensemble::tire() {
     if (estVide()) {
         throw runtime_error("Erreur: ensemble vide !");
-    } // хаха сранд лол
-    srand(time(nullptr)); // initialiser la graine de random a chaque appel
+    }
+
+    /*
+    This code is needed so that stand() (randomness setting) is called only once 
+    for the entire duration of the program. If you call it many times in a row, 
+    the numbers may repeat, because the time hardly changes. This way we get more 
+    authentic random numbers.
+    */
+    static bool isSeeded = false;
+    if (!isSeeded) {
+        srand(static_cast<unsigned>(time(nullptr)));
+        isSeeded = true;
+    } // initialiser la graine de random une fois au debut 
+
+
     int index = rand() % card; // tire un index valide
     int valeur = t[index];
 
@@ -56,6 +69,24 @@ Ensemble Ensemble::voisines() const {
     }
     return resultat;
 }
+
+bool Ensemble::contient(int val) const {
+    for (int i = 0; i < card; ++i) {
+        if (t[i] == val) return true;
+    }
+    return false;
+}
+
+void Ensemble::retire(int val) {
+    for (int i = 0; i < card; ++i) {
+        if (t[i] == val) {
+            t[i] = t[card - 1];  // the deleted one changes for the last one 
+            --card;
+            return;
+        }
+    }
+}
+
 
 void Ensemble::affiche(ostream& os) const {
     os << "{ ";

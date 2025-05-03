@@ -4,6 +4,8 @@
 #include "coord.hpp"
 #include "ensemble.hpp"
 #include "animal.hpp"
+#include "population.hpp"
+#include "grille.hpp"
 
 using namespace std;
 
@@ -157,4 +159,89 @@ TEST_CASE("Animal: reproduction") {
     Animal l(6, Espece::Lapin, Coord(3, 3));
     CHECK(l.seReproduit(2) == true);
     CHECK(l.seReproduit(0) == false);
+}
+
+// === Tests Population ===
+TEST_CASE("Population: reserve and set") {
+    Population p;
+
+    // Réserver un ID libre
+    int id = p.reserve();
+    CHECK(p.getIds().cardinal() == 1);
+
+    // Créer et ajouter un animal avec cet ID
+    Animal a(id, Espece::Lapin, Coord(3, 3));
+    p.set(a);
+
+    // Vérifier qu'il a été ajouté
+    Animal a2 = p.get(id);
+    CHECK(a2.getId() == id);
+    CHECK(a2.getCoord() == Coord(3, 3));
+    CHECK(a2.getEspece() == Espece::Lapin);
+}
+
+TEST_CASE("Population: reserve plusieurs IDs") {
+    Population p;
+
+    int id1 = p.reserve();
+    int id2 = p.reserve();
+    CHECK(id1 != id2);
+    CHECK(p.getIds().cardinal() == 2);
+}
+
+TEST_CASE("Population: set modifie l'animal existant") {
+    Population p;
+    int id = p.reserve();
+    Animal a(id, Espece::Renard, Coord(2, 2));
+    p.set(a);
+
+    Animal modifie(id, Espece::Renard, Coord(4, 4));
+    p.set(modifie); // mise à jour
+
+    Animal result = p.get(id);
+    CHECK(result.getCoord() == Coord(4, 4));
+}
+
+TEST_CASE("Population: supprime") {
+    Population p;
+    int id = p.reserve();
+    p.set(Animal(id, Espece::Lapin, Coord(1, 1)));
+    p.supprime(id);
+    CHECK(p.getIds().cardinal() == 0);
+    CHECK_THROWS_AS(p.get(id), out_of_range);
+}
+
+
+TEST_CASE("Population: reserve throws when full") {
+    Population p;
+    for (int i = 0; i < MAXCARD; ++i) {
+        int id = p.reserve();
+        p.set(Animal(id, Espece::Lapin, Coord(0, 0)));
+    }
+    CHECK_THROWS_AS(p.reserve(), runtime_error);
+}
+
+// === Tests Grille ===
+TEST_CASE("Grille: initialisation vide") {
+    Grille g;
+    Coord c(3, 3);
+    CHECK(g.caseVide(c));
+    CHECK(g.getCase(c) == -1);
+}
+
+TEST_CASE("Grille: setCase et getCase") {
+    Grille g;
+    Coord c(2, 2);
+    g.setCase(c, 42);
+    CHECK(!g.caseVide(c));
+    CHECK(g.getCase(c) == 42);
+}
+
+TEST_CASE("Grille: videCase remet a VIDE") {
+    Grille g;
+    Coord c(1, 1);
+    g.setCase(c, 7);
+    g.videCase(c);
+    CHECK(g.caseVide(c));
+    CHECK(g.getCase(c) == -1);
 }

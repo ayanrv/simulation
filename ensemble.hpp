@@ -20,6 +20,10 @@ public:
     int cardinal() const;         // renvoie le nombre d'elements
     void ajoute(int val);         // ajoute un entier a l'ensemble
     int tire();                   // retire un element au hasard
+    
+    // for population and tests
+    bool contient(int val) const;
+    void retire(int val);
 
     void affiche(std::ostream& os) const; // affiche les elements significatifs
 
