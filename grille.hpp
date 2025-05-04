@@ -8,6 +8,8 @@
 // Convention pour case vide
 const int VIDE = -1;
 
+const int FRAISE = -2;
+
 // TAILLEGRILLE est 40
 
 class Grille {
@@ -23,11 +25,15 @@ public:
     bool caseVide(const Coord& c) const;
     // Retourne l'identifiant de l'animal present dans la case
     int getCase(const Coord& c) const;
+    bool contientFraise(const Coord&) const;
 
     // === Modificateurs ===
     // Place un animal dans une case
     void setCase(const Coord& c, int idAnimal);
     void videCase(const Coord& c);
+    void placeFraise(const Coord&);
+
+    void mangeFraise(const Coord&);
 
     // Affiche la grille avec L / R / . en fonction du contenu
     void affiche(const Population& pop, std::ostream& os) const;

@@ -206,6 +206,7 @@ int main() {
     const int maxFaim = 10;
 
     const double probReproRenard = 0.3;
+    const int nbFraisesMax = 50;
 
     // === Initialisation jeu ===
     Jeu jeu(probLapinInit, probRenardInit);
@@ -220,7 +221,7 @@ int main() {
         try {
             jeu.tour(probReproLapin, minFreeLapin,
                      foodInit, foodReprod, foodGain, maxFaim,
-                     probReproRenard);
+                     probReproRenard, nbFraisesMax);
         } catch (const exception& e) {
             cerr << "[Erreur] Une exception a ete levee: " << e.what() << endl;
             break;
@@ -232,7 +233,7 @@ int main() {
 
     cout << "\nSimulation terminee. Images enregistrees dans le dossier 'frames/'." << endl;
 
-    // === Génération automatique GIF ===
+    // === Generation automatique GIF ===
     cout << "\nTentative de génération d'une animation GIF avec ImageMagick..." << endl;
     int result = system("convert -delay 10 -loop 0 frames/grille*.ppm animation.gif");
 
@@ -241,6 +242,7 @@ int main() {
     } else {
         cerr << "Echec de la commande 'convert'. Assurez-vous qu'ImageMagick est installe." << endl;
     }
+
 
 
     return 0;

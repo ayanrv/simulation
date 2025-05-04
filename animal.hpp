@@ -6,18 +6,23 @@
 
 using namespace std;
 
+// === Type d'espece ===
 enum class Espece { Lapin, Renard };
+
+// === Sexe biologique ===
+enum class Sexe { Male, Female };
 
 class Animal {
 private:
     int id;
     Espece espece;
     Coord position;
+    Sexe sexe;
     int faim; // Niveau de faim
 
 public:
     // === Constructeur ===
-    Animal(int id, Espece espece, Coord position);
+    Animal(int id, Espece espece, Coord position, Sexe sexe);
 
     // === Accesseurs ===
     int getId() const;
@@ -26,10 +31,12 @@ public:
     Espece getEspece() const;
     //to check conditions for reproduction (Renards)
     int getFaim() const;
+    Sexe getSexe() const;
 
     // === Predicats ===
     bool meurt(int maxFaim) const;
     bool seReproduit(int nbVoisinsVides, int seuil) const;
+    static Sexe sexeAleatoire();
 
     // === Modificateurs ===
     void mange(int foodGain, int maxFaim); // Remet la faim à 0

@@ -30,6 +30,8 @@ public:
     // Retourne les voisines contenant une espece donnee
     Ensemble voisinsEspece(const Coord& c, Espece e) const;
 
+    Ensemble voisinsOpposeSexe(const Coord& c, Espece espece, Sexe sexe) const;
+
     // Deplace l’animal vers une case voisine vide (si possible)
     void deplaceAnimal(int id);
 
@@ -41,8 +43,8 @@ public:
     bool checkConsistence() const;
     // Effectue un tour de simulation complet : deplacement, reproduction, mort
     void tour(double probReproLapin, int minFreeLapin,
-            int foodInit, int foodReprod, int foodGain, int maxFaim,
-            double probReproRenard);
+        int foodInit, int foodReprod, int foodGain, int maxFaim,
+        double probReproRenard, int nbFraisesMax);
     /*
     TOUR:
     1. LAPINS
