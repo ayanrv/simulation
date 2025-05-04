@@ -22,7 +22,7 @@ private:
 
 public:
     // === Constructeur ===
-    Animal(int id, Espece espece, Coord position, Sexe sexe);
+    Animal(int id, Espece espece, Coord position);
 
     // === Accesseurs ===
     int getId() const;

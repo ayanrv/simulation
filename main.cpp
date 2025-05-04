@@ -194,21 +194,21 @@ int main() {
 
     // === Paramètres de simulation ===
     const int nbTours = 20;
-    const double probLapinInit = 0.20;
+    const double probLapinInit = 0.22;
     const double probRenardInit = 0.07;
 
-    const double probReproLapin = 0.4;
-    const int minFreeLapin = 3;
+    const double probReproLapin = 0.45;
+    const int minFreeLapin = 2;
 
-    const int foodInit = 5;
-    const int foodReprod = 4;
-    const int foodGain = 5;
-    const int maxFaim = 10;
+    const int foodInit = 7;         // ⬆ plus de nourriture initiale
+    const int foodReprod = 4;       // ⬇ reproduction plus facile
+    const int foodGain = 6;         // ⬆ gain de nourriture
+    const int maxFaim = 12;         // ⬆ tolérance à la faim
 
     const double probReproRenard = 0.3;
-    const int nbFraisesMax = 50;
+    const int nbFraisesMax = 150;   // ⬆ plus de fraises autorisées
 
-    // === Initialisation jeu ===
+    // === Initialisation du jeu ===
     Jeu jeu(probLapinInit, probRenardInit);
     cout << "--- Simulation (0) ---" << endl;
     jeu.affiche(cout);
@@ -233,7 +233,7 @@ int main() {
 
     cout << "\nSimulation terminee. Images enregistrees dans le dossier 'frames/'." << endl;
 
-    // === Generation automatique GIF ===
+    // === Génération automatique GIF ===
     cout << "\nTentative de génération d'une animation GIF avec ImageMagick..." << endl;
     int result = system("convert -delay 10 -loop 0 frames/grille*.ppm animation.gif");
 
@@ -242,7 +242,6 @@ int main() {
     } else {
         cerr << "Echec de la commande 'convert'. Assurez-vous qu'ImageMagick est installe." << endl;
     }
-
 
 
     return 0;

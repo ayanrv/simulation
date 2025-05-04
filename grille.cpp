@@ -1,4 +1,5 @@
 #include "grille.hpp"
+#include "iomanip"
 using namespace std;
 
 // Constructeur : met toutes les cases a VIDE
@@ -53,29 +54,48 @@ void Grille::mangeFraise(const Coord& c) {
 
 // Affiche la grille avec des emojis :
 //   . → "⬜", Lapin → "🐰", Renard → "🦊", Fraise → "🍓"
-void Grille::affiche(const Population& pop, ostream& os) const {
+void Grille::affiche(const Population& pop, std::ostream& os) const {
+    const std::string vide = "⚫";
+    const std::string fraise = "🍓";
+    const std::string lapin = "🐰";
+    const std::string renard = "🦊";
+
+    // ligne du haut
+    os << "  ";
+    for (int j = 0; j < TAILLEGRILLE; ++j) {
+        os << "__";
+    }
+    os << '\n';
+
+    // affichage ligne par ligne
     for (int i = 0; i < TAILLEGRILLE; ++i) {
+        os << "| ";  // début de ligne
         for (int j = 0; j < TAILLEGRILLE; ++j) {
             int id = grille[i][j];
+            std::string symbole = vide;
 
-            if (id == VIDE) {
-                os << " ⬜";
-            } else if (id == FRAISE) {
-                os << " 🍓";
-            } else {
+            if (id == FRAISE) {
+                symbole = fraise;
+            } else if (id != VIDE) {
                 try {
-                    Animal a = pop.get(id);
-                    if (a.getEspece() == Espece::Lapin)
-                        os << " 🐰";
-                    else
-                        os << " 🦊";
+                    const Animal& a = pop.get(id);
+                    symbole = (a.getEspece() == Espece::Lapin ? lapin : renard);
                 } catch (...) {
-                    os << " ❓";
+                    symbole = "??";
                 }
             }
+
+            os << symbole;
         }
-        os << '\n';
+        os << " |\n";
     }
+
+    // ligne du bas
+    os << "  ";
+    for (int j = 0; j < TAILLEGRILLE; ++j) {
+        os << "‾‾";
+    }
+    os << '\n';
 }
 
 

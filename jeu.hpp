@@ -11,6 +11,13 @@ private:
     Grille grille;
     Population population;
 
+    struct Fraise {
+        Coord pos;
+        int age;
+    };
+    
+    std::vector<Fraise> fraises;
+
 public:
     // Constructeur par defaut (grille vide, population vide)
     Jeu();
@@ -33,14 +40,14 @@ public:
     Ensemble voisinsOpposeSexe(const Coord& c, Espece espece, Sexe sexe) const;
 
     // Deplace l’animal vers une case voisine vide (si possible)
-    void deplaceAnimal(int id);
+    void deplaceAnimal(int id, int foodGain, int maxFaim);
 
     // Acces direct a la grille et la population cause they are private
     const Grille& getGrille() const;
     const Population& getPopulation() const;
 
     //check if grille and population are working right along after each tour
-    bool checkConsistence() const;
+    bool checkConsistence();
     // Effectue un tour de simulation complet : deplacement, reproduction, mort
     void tour(double probReproLapin, int minFreeLapin,
         int foodInit, int foodReprod, int foodGain, int maxFaim,
@@ -61,4 +68,3 @@ public:
 };
 
 #endif
-

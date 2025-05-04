@@ -3,7 +3,7 @@
 using namespace std;
 
 // === Constructeur ===
-Animal::Animal(int id, Espece espece, Coord position, Sexe sexe)
+Animal::Animal(int id, Espece espece, Coord position)
     : id(id), espece(espece), position(position), sexe(sexeAleatoire()), faim(0) {}
 
 // === Accesseurs ===

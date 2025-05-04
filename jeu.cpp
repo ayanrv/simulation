@@ -36,7 +36,7 @@ void Jeu::ajouteAnimal(Espece e, const Coord& c) {
         throw runtime_error("Case deja occupee");
     }
     int id = population.reserve();
-    Animal a(id, e, c, Animal::sexeAleatoire());
+    Animal a(id, e, c);
     population.set(a);
     grille.setCase(c, id);
 }
@@ -97,30 +97,46 @@ Ensemble Jeu::voisinsOpposeSexe(const Coord& c, Espece espece, Sexe sexe) const 
     return res;
 }
 
-void Jeu::deplaceAnimal(int id) {
+void Jeu::deplaceAnimal(int id, int foodGain, int maxFaim) {
     if (!population.existe(id)) return;
 
     Animal a = population.get(id);
     Coord pos = a.getCoord();
     vector<Coord> voisins = pos.voisins();
 
-    // === 1. Chercher la nourriture prioritairement (lapin → fraise, renard → lapin)
     for (const Coord& v : voisins) {
         if (!grille.caseVide(v)) {
             int contenu = grille.getCase(v);
+
+            // 🍓 Lapin mange fraise
             if (a.getEspece() == Espece::Lapin && contenu == FRAISE) {
                 grille.videCase(pos);
                 a.setCoord(v);
+                a.mange(foodGain, maxFaim);
                 population.set(a);
-                grille.videCase(v); // mange fraise
+                grille.videCase(v);
                 grille.setCase(v, id);
+
+                // Supprimer fraise de la liste
+                for (auto it = fraises.begin(); it != fraises.end(); ++it) {
+                    if (it->pos.toInt() == v.toInt()) {
+                        fraises.erase(it);
+                        break;
+                    }
+                }
                 return;
             }
-            if (a.getEspece() == Espece::Renard && contenu != FRAISE && population.get(contenu).getEspece() == Espece::Lapin) {
+
+            // 🦊 Renard mange lapin
+            if (a.getEspece() == Espece::Renard &&
+                contenu != FRAISE &&
+                population.existe(contenu) &&
+                population.get(contenu).getEspece() == Espece::Lapin) {
                 grille.videCase(pos);
-                grille.videCase(v); // mange lapin
+                grille.videCase(v);
                 population.supprime(contenu);
                 a.setCoord(v);
+                a.mange(foodGain, maxFaim);
                 population.set(a);
                 grille.setCase(v, id);
                 return;
@@ -128,7 +144,8 @@ void Jeu::deplaceAnimal(int id) {
         }
     }
 
-    // === 2. Sinon, aller vers une case vide aleatoire
+    // Aucun repas → déplacement simple
+    a.jeune();
     Ensemble libres = voisinsVides(pos);
     if (!libres.estVide()) {
         Coord cible(libres.tire());
@@ -137,9 +154,10 @@ void Jeu::deplaceAnimal(int id) {
         population.set(a);
         grille.setCase(cible, id);
     } else {
-        population.set(a); // juste mettre a jour faim ou autre
+        population.set(a);
     }
 }
+
 
 
 // Acces a la grille
@@ -152,14 +170,13 @@ const Population& Jeu::getPopulation() const {
     return population;
 }
 
-bool Jeu::checkConsistence() const {
+bool Jeu::checkConsistence() {
     Ensemble ids = population.getIds();
 
-    // === 1. Verification population → grille
+    // === 1. Vérification population → grille
     for (int i = 0; i < ids.cardinal(); ++i) {
         int id = ids.get(i);
 
-        // Verifie que l'animal existe vraiment
         if (!population.existe(id)) {
             throw runtime_error("Erreur: ID " + to_string(id) +
                                 " est dans l'ensemble mais pas dans la population.");
@@ -168,7 +185,6 @@ bool Jeu::checkConsistence() const {
         const Animal& a = population.get(id);
         Coord c = a.getCoord();
 
-        // Verifie que la grille contient bien cet animal a sa position
         if (grille.getCase(c) != id) {
             throw runtime_error("Erreur: animal ID " + to_string(id) +
                                 " est a " + c.toString() +
@@ -176,164 +192,154 @@ bool Jeu::checkConsistence() const {
         }
     }
 
-    // === 2. Verification grille → population
+    // === 2. Vérification grille → population
     for (int lig = 0; lig < TAILLEGRILLE; ++lig) {
         for (int col = 0; col < TAILLEGRILLE; ++col) {
             Coord c(lig, col);
-            int id = grille.getCase(c);
+            int val = grille.getCase(c);
 
-            if (id == VIDE || id == FRAISE) continue;
+            if (val == VIDE || val == FRAISE) continue;
 
-            // Verifie que l'identifiant existe bien dans la population
-            if (!population.existe(id)) {
-                throw runtime_error("Erreur: la grille contient ID " + to_string(id) +
+            if (!population.existe(val)) {
+                throw runtime_error("Erreur: grille contient ID " + to_string(val) +
                                     " a " + c.toString() +
                                     " mais la population ne le contient pas.");
             }
 
-            // Verifie la position reelle de l'animal
-            if (population.get(id).getCoord().toInt() != c.toInt()) {
-                throw runtime_error("Erreur: grille[" + c.toString() + "] = " + to_string(id) +
-                                    ", mais l'animal est a " + population.get(id).getCoord().toString());
+            if (population.get(val).getCoord().toInt() != c.toInt()) {
+                throw runtime_error("Erreur: grille[" + c.toString() + "] = " + to_string(val) +
+                                    ", mais l'animal est a " + population.get(val).getCoord().toString());
             }
+        }
+    }
+
+    // === 3. Nettoyage des fraises incohérentes
+    for (auto it = fraises.begin(); it != fraises.end();) {
+        if (grille.getCase(it->pos) != FRAISE) {
+            it = fraises.erase(it); // fraise disparue de la grille, on la retire aussi
+        } else {
+            ++it;
         }
     }
 
     return true;
 }
 
+
+
 void Jeu::tour(double probReproLapin, int minFreeLapin,
     int foodInit, int foodReprod, int foodGain, int maxFaim,
     double probReproRenard, int nbFraisesMax) {
-// === Phase 0 : Génération de fraises proportionnelle aux lapins ===
-int nbLapins = 0;
-Ensemble ids = population.getIds();
-for (int i = 0; i < ids.cardinal(); ++i) {
-if (population.existe(ids.get(i)) && population.get(ids.get(i)).getEspece() == Espece::Lapin)
- ++nbLapins;
+
+    // === Vieillissement fraises ===
+    for (auto it = fraises.begin(); it != fraises.end();) {
+        if (--(it->age) <= 0) {
+            grille.videCase(it->pos);
+            it = fraises.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // === Génération de fraises ===
+    int nbLapins = 0;
+    Ensemble ids = population.getIds();
+    for (int i = 0; i < ids.cardinal(); ++i) {
+        int id = ids.get(i);
+        if (population.existe(id) &&
+            population.get(id).getEspece() == Espece::Lapin)
+            ++nbLapins;
+    }
+
+    int nbFraisesCibles = std::min(nbFraisesMax, static_cast<int>(nbLapins * 0.95));
+    int aGenerer = std::max(5, nbFraisesCibles - static_cast<int>(fraises.size())); // min 5
+    int generated = 0, tries = 0;
+
+    while (generated < aGenerer && tries < 20 * aGenerer) {
+        Coord c(rand() % TAILLEGRILLE, rand() % TAILLEGRILLE);
+        if (grille.caseVide(c)) {
+            grille.setCase(c, FRAISE);
+            fraises.push_back({c, 5});
+            ++generated;
+        }
+        ++tries;
+    }
+
+    // === Lapins ===
+    Ensemble idsLapins;
+    for (int i = 0; i < ids.cardinal(); ++i) {
+        int id = ids.get(i);
+        if (population.existe(id) &&
+            population.get(id).getEspece() == Espece::Lapin)
+            idsLapins.ajoute(id);
+    }
+
+    for (int i = 0; i < idsLapins.cardinal(); ++i) {
+        int id = idsLapins.get(i);
+        if (!population.existe(id)) continue;
+
+        deplaceAnimal(id, foodGain, maxFaim);
+        if (!population.existe(id)) continue;
+
+        Animal l = population.get(id);
+        Coord pos = l.getCoord();
+        Ensemble partenaires = voisinsOpposeSexe(pos, Espece::Lapin, l.getSexe());
+        Ensemble vides = voisinsVides(pos);
+
+        if (!partenaires.estVide() &&
+            l.getFaim() <= foodReprod &&
+            l.seReproduit(vides.cardinal(), minFreeLapin)) {
+            double r = (double)rand() / RAND_MAX;
+            if (r < probReproLapin && !vides.estVide()) {
+                Coord naissance(vides.tire());
+                ajouteAnimal(Espece::Lapin, naissance);
+            }
+        }
+    }
+
+    // === Renards ===
+    Ensemble idsRenards;
+    for (int i = 0; i < ids.cardinal(); ++i) {
+        int id = ids.get(i);
+        if (population.existe(id) &&
+            population.get(id).getEspece() == Espece::Renard)
+            idsRenards.ajoute(id);
+    }
+
+    for (int i = 0; i < idsRenards.cardinal(); ++i) {
+        int id = idsRenards.get(i);
+        if (!population.existe(id)) continue;
+
+        deplaceAnimal(id, foodGain, maxFaim);
+        if (!population.existe(id)) continue;
+
+        Animal r = population.get(id);
+        if (r.meurt(maxFaim)) {
+            grille.videCase(r.getCoord());
+            population.supprime(id);
+            continue;
+        }
+
+        Coord pos = r.getCoord();
+        Ensemble partenaires = voisinsOpposeSexe(pos, Espece::Renard, r.getSexe());
+        Ensemble vides = voisinsVides(pos);
+
+        if (!partenaires.estVide() &&
+            r.getFaim() <= foodReprod &&
+            r.seReproduit(vides.cardinal(), 1)) {
+            double rr = (double)rand() / RAND_MAX;
+            if (rr < probReproRenard && !vides.estVide()) {
+                Coord naissance(vides.tire());
+                Animal nouveau(population.reserve(), Espece::Renard, naissance);
+                for (int i = 0; i < foodInit; ++i) nouveau.jeune();
+                population.set(nouveau);
+                grille.setCase(naissance, nouveau.getId());
+            }
+        }
+    }
+
+    checkConsistence();
 }
-
-double p = 0.4;
-int nbFraisesParTour = std::min(nbFraisesMax, static_cast<int>(nbLapins * p));
-int generated = 0, tries = 0;
-while (generated < nbFraisesParTour && tries < 10 * nbFraisesParTour) {
-Coord c(rand() % TAILLEGRILLE, rand() % TAILLEGRILLE);
-if (grille.caseVide(c)) {
- grille.setCase(c, FRAISE);
- ++generated;
-}
-++tries;
-}
-
-// === Phase Lapins ===
-Ensemble idsLapins;
-for (int i = 0; i < ids.cardinal(); ++i) {
-int id = ids.get(i);
-if (population.existe(id) && population.get(id).getEspece() == Espece::Lapin)
- idsLapins.ajoute(id);
-}
-
-for (int i = 0; i < idsLapins.cardinal(); ++i) {
-int id = idsLapins.get(i);
-if (!population.existe(id)) continue;
-
-Animal l = population.get(id);
-Coord pos = l.getCoord();
-
-// Vie
-if (grille.getCase(pos) == FRAISE) {
- l.mange(foodGain, maxFaim);
- grille.videCase(pos);
-} else {
- l.jeune();
-}
-
-population.set(l);
-deplaceAnimal(id); // mange ou déplace si possible
-
-// Reproduction
-Animal l2 = population.get(id);  // après mouvement
-Coord nouvPos = l2.getCoord();
-Ensemble voisins = voisinsOpposeSexe(nouvPos, Espece::Lapin, l2.getSexe());
-Ensemble vides = voisinsVides(nouvPos);
-
-if (!voisins.estVide() && l2.getFaim() <= foodReprod && l2.seReproduit(vides.cardinal(), minFreeLapin)) {
- double r = static_cast<double>(rand()) / RAND_MAX;
- if (r < probReproLapin && !vides.estVide()) {
-     Coord naissance(vides.tire());
-     ajouteAnimal(Espece::Lapin, naissance);
- }
-}
-}
-
-// === Phase Renards ===
-Ensemble idsRenards;
-for (int i = 0; i < ids.cardinal(); ++i) {
-int id = ids.get(i);
-if (population.existe(id) && population.get(id).getEspece() == Espece::Renard)
- idsRenards.ajoute(id);
-}
-
-for (int i = 0; i < idsRenards.cardinal(); ++i) {
-int id = idsRenards.get(i);
-if (!population.existe(id)) continue;
-
-Animal r = population.get(id);
-Coord pos = r.getCoord();
-
-// Vie
-bool aMange = false;
-for (const Coord& v : pos.voisins()) {
- if (!grille.caseVide(v)) {
-     int contenu = grille.getCase(v);
-     if (contenu != FRAISE && population.get(contenu).getEspece() == Espece::Lapin) {
-         population.supprime(contenu);
-         grille.videCase(v);
-         grille.videCase(pos);
-         r.setCoord(v);
-         r.mange(foodGain, maxFaim);
-         population.set(r);
-         grille.setCase(v, id);
-         aMange = true;
-         break;
-     }
- }
-}
-
-if (!aMange) {
- r.jeune();
- population.set(r);
- deplaceAnimal(id);
-}
-
-// Mort de faim
-if (r.meurt(maxFaim)) {
- grille.videCase(r.getCoord());
- population.supprime(id);
- continue;
-}
-
-// Reproduction
-Animal r2 = population.get(id);
-Coord nouvPos = r2.getCoord();
-Ensemble voisins = voisinsOpposeSexe(nouvPos, Espece::Renard, r2.getSexe());
-Ensemble vides = voisinsVides(nouvPos);
-
-if (!voisins.estVide() && r2.getFaim() <= foodReprod && r2.seReproduit(vides.cardinal(), 1)) {
- double rr = static_cast<double>(rand()) / RAND_MAX;
- if (rr < probReproRenard && !vides.estVide()) {
-     Coord naissance = vides.tire();
-     Animal nouveau(population.reserve(), Espece::Renard, naissance, Animal::sexeAleatoire());
-     for (int i = 0; i < foodInit; ++i) nouveau.jeune();
-     population.set(nouveau);
-     grille.setCase(naissance, nouveau.getId());
- }
-}
-}
-
-checkConsistence();
-}
-
 
 void Jeu::affiche(ostream& os) const {
     grille.affiche(population, os);
