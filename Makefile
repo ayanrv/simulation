@@ -10,7 +10,11 @@ main: main.cpp $(OBJ)
 test: test.cpp $(OBJ)
 	$(CXX) $(CXXFLAGS) -o test test.cpp $(SRC)
 
+sfml: sfml/sfml_main.cpp sfml/JeuSFML.cpp $(SRC)
+	$(CXX) $(CXXFLAGS) -o sfml_sim sfml/sfml_main.cpp sfml/JeuSFML.cpp sfml/Menu.cpp $(SRC) \
+		-I. -Isfml -lsfml-graphics -lsfml-window -lsfml-system
+
 clean:
-	rm -f *.o main test
+	rm -f *.o main test sfml_sim
 	rm -f frames/grille*.ppm
 	rm -f animation.gif

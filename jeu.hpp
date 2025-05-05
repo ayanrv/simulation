@@ -16,7 +16,9 @@ private:
         int age;
     };
     
-    std::vector<Fraise> fraises;
+    vector<Fraise> fraises;
+    double probLapin;
+    double probRenard;
 
 public:
     // Constructeur par defaut (grille vide, population vide)
@@ -24,6 +26,11 @@ public:
 
     // Constructeur avec probabilites (remplissage aleatoire)
     Jeu(double probLapins, double probRenards);
+
+    const vector<Jeu::Fraise>& getFraises() const;
+    //for test
+    vector<Fraise>& getFraises(); // version modifiable
+
 
     // Ajoute un animal de type e a la coordonnée c
     void ajouteAnimal(Espece e, const Coord& c);
@@ -44,6 +51,8 @@ public:
 
     // Acces direct a la grille et la population cause they are private
     const Grille& getGrille() const;
+    //for test
+    Grille& getGrille(); // version modifiable
     const Population& getPopulation() const;
 
     //check if grille and population are working right along after each tour
@@ -65,6 +74,8 @@ public:
         e. Reproduce if conditions met
     */
     void affiche(ostream& os) const;
+
+    void reset();
 };
 
 #endif

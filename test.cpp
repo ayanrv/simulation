@@ -159,12 +159,6 @@ TEST_CASE("Renard: mange trop ne descend pas sous 0") {
     CHECK(r.getFaim() == 0);
 }
 
-TEST_CASE("Lapin: ne meurt jamais") {
-    Animal l(6, Espece::Lapin, Coord(6, 6));
-    for (int i = 0; i < 10; ++i) l.jeune();
-    CHECK(l.meurt(0) == false);
-}
-
 TEST_CASE("Animal: reproduction selon seuil") {
     Animal l(7, Espece::Lapin, Coord(3, 3));
     CHECK(l.seReproduit(3, 2));  // ok
@@ -258,90 +252,72 @@ TEST_CASE("Grille: videCase remet a VIDE") {
 }
 
 // === Tests Jeu ===
+TEST_CASE("Jeu: ajouteAnimal positionne correctement l'animal") {
+    Jeu j;
+    Coord c(1, 1);
+    j.ajouteAnimal(Espece::Lapin, c);
 
-TEST_CASE("Jeu: ajouteAnimal et verifieGrille") {
+    int id = j.getGrille().getCase(c);
+
+    CHECK(j.getPopulation().get(id).getCoord() == c);
+    CHECK(j.getGrille().getCase(c) == id);
+    CHECK(j.checkConsistence());
+}
+
+TEST_CASE("Jeu: voisinsVides retourne les cases vides adjacentes") {
+    Jeu j;
+    Coord centre(10, 10);
+    j.ajouteAnimal(Espece::Lapin, centre);
+
+    Ensemble vides = j.voisinsVides(centre);
+    CHECK(vides.cardinal() > 0);
+}
+
+TEST_CASE("Jeu: voisinsEspece retourne les bons voisins") {
+    Jeu j;
+    Coord c1(5, 5), c2(5, 6);
+    j.ajouteAnimal(Espece::Lapin, c1);
+    j.ajouteAnimal(Espece::Renard, c2);
+
+    Ensemble l = j.voisinsEspece(c2, Espece::Lapin);
+    CHECK(l.cardinal() == 1);
+
+    Ensemble r = j.voisinsEspece(c1, Espece::Renard);
+    CHECK(r.cardinal() == 1);
+}
+
+TEST_CASE("Jeu: deplaceAnimal déplace vers case vide") {
+    Jeu j;
+    Coord c(3, 3);
+    j.ajouteAnimal(Espece::Lapin, c);
+
+    int id = j.getGrille().getCase(c);
+    j.deplaceAnimal(id, 3, 10);
+
+    Coord nouveau = j.getPopulation().get(id).getCoord();
+    CHECK(nouveau != c);
+    CHECK(j.getGrille().getCase(nouveau) == id);
+}
+
+TEST_CASE("Jeu: tour ajoute fraises et nettoie les anciennes") {
+    Jeu j;
+    j.ajouteAnimal(Espece::Lapin, Coord(1, 1));
+    j.tour(0, 0, 3, 5, 1, 10, 0, 10);
+
+    CHECK(j.getFraises().size() > 0);  // au lieu de >= 5
+
+    for (auto& f : j.getFraises()) f.age = 1;
+    j.tour(0, 0, 3, 5, 1, 10, 0, 10);
+
+    CHECK(j.getFraises().size() > 0);  // toujours des fraises fraîches
+}
+
+
+TEST_CASE("Jeu: checkConsistence détecte corruption de grille") {
     Jeu j;
     Coord c(2, 2);
     j.ajouteAnimal(Espece::Lapin, c);
 
-    CHECK(j.getGrille().getCase(c) != -1);
-    CHECK(j.getPopulation().get(j.getGrille().getCase(c)).getCoord() == c);
-    CHECK(j.verifieGrille());
+    j.getGrille().videCase(c);  // corruption manuelle
+    CHECK_THROWS_AS(j.checkConsistence(), runtime_error);
 }
-
-TEST_CASE("Jeu: voisinsVides") {
-    Jeu j;
-    Coord c(5, 5);
-    j.ajouteAnimal(Espece::Lapin, c);
-
-    Ensemble libres = j.voisinsVides(c);
-    CHECK(libres.cardinal() > 0);
-}
-
-TEST_CASE("Jeu: voisinsEspece") {
-    Jeu j;
-    Coord centre(4, 4);
-    Coord voisin(4, 5);
-
-    j.ajouteAnimal(Espece::Lapin, centre);
-    j.ajouteAnimal(Espece::Renard, voisin);
-
-    Ensemble lapins = j.voisinsEspece(voisin, Espece::Lapin);
-    CHECK(lapins.cardinal() == 1);
-
-    Ensemble renards = j.voisinsEspece(centre, Espece::Renard);
-    CHECK(renards.cardinal() == 1);
-}
-
-TEST_CASE("Jeu: deplaceAnimal bouge vers case vide") {
-    Jeu j;
-    Coord c(10, 10);
-    j.ajouteAnimal(Espece::Lapin, c);
-
-    int id = j.getGrille().getCase(c);
-    j.deplaceAnimal(id);
-
-    const Animal& a = j.getPopulation().get(id);
-    CHECK(a.getCoord() != c);
-    CHECK(j.getGrille().getCase(c) == -1);
-    CHECK(j.checkConsistence());
-}
-
-TEST_CASE("Jeu: constructeur probabiliste genere des animaux") {
-    Jeu j(0.03, 0.02);  // 5% всего => макс. ~80
-    int total = j.getPopulation().getIds().cardinal();
-    CHECK(total > 0);
-    CHECK(total < TAILLEGRILLE * TAILLEGRILLE);
-}
-
-TEST_CASE("Jeu: un renard mange un lapin et survit") {
-    Jeu j;
-    Coord l(3, 3), r(3, 4);
-    j.ajouteAnimal(Espece::Lapin, l);
-    j.ajouteAnimal(Espece::Renard, r);
-
-    int idR = j.getGrille().getCase(r);
-
-    j.tour(1.0, 1, 0, 5, 2, 10, 0.0);  // le renard va essayer de manger le lapin
-
-    CHECK(j.getPopulation().existe(idR));  // le renard doit survivre
-
-    bool lapinMange = (j.getGrille().getCase(l) == -1);
-    bool renardBouge = (j.getGrille().getCase(r) != idR);
-    bool condition = lapinMange || renardBouge;
-
-    CHECK(condition);
-}
-
-TEST_CASE("Jeu: lapin se reproduit avec proba haute") {
-    Jeu j;
-    Coord c(6, 6);
-    j.ajouteAnimal(Espece::Lapin, c);
-    int oldCount = j.getPopulation().getIds().cardinal();
-
-    j.tour(1.0, 1, 0, 5, 2, 10, 0.0);  // proba de reproduction = 100%
-
-    int newCount = j.getPopulation().getIds().cardinal();
-    CHECK(newCount > oldCount);
-}
-

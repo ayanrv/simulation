@@ -158,12 +158,15 @@ void Jeu::deplaceAnimal(int id, int foodGain, int maxFaim) {
     }
 }
 
-
-
 // Acces a la grille
 const Grille& Jeu::getGrille() const {
     return grille;
 }
+
+Grille& Jeu::getGrille() {
+    return grille;
+}
+
 
 // Acces a la population
 const Population& Jeu::getPopulation() const {
@@ -231,8 +234,8 @@ void Jeu::tour(double probReproLapin, int minFreeLapin,
     int foodInit, int foodReprod, int foodGain, int maxFaim,
     double probReproRenard, int nbFraisesMax) {
 
-    // === Vieillissement fraises ===
-    for (auto it = fraises.begin(); it != fraises.end();) {
+   // === Vieillissement fraises ===
+   for (auto it = fraises.begin(); it != fraises.end();) {
         if (--(it->age) <= 0) {
             grille.videCase(it->pos);
             it = fraises.erase(it);
@@ -251,11 +254,11 @@ void Jeu::tour(double probReproLapin, int minFreeLapin,
             ++nbLapins;
     }
 
-    int nbFraisesCibles = std::min(nbFraisesMax, static_cast<int>(nbLapins * 0.95));
-    int aGenerer = std::max(5, nbFraisesCibles - static_cast<int>(fraises.size())); // min 5
+    int nbFraisesCibles = min(nbFraisesMax, static_cast<int>(nbLapins * 0.95));
+    int aGenerer = max(5, nbFraisesCibles - static_cast<int>(fraises.size()));
     int generated = 0, tries = 0;
 
-    while (generated < aGenerer && tries < 20 * aGenerer) {
+    while (generated < aGenerer && tries < 50 * aGenerer) {
         Coord c(rand() % TAILLEGRILLE, rand() % TAILLEGRILLE);
         if (grille.caseVide(c)) {
             grille.setCase(c, FRAISE);
@@ -341,6 +344,15 @@ void Jeu::tour(double probReproLapin, int minFreeLapin,
     checkConsistence();
 }
 
+
+const vector<Jeu::Fraise>& Jeu::getFraises() const {
+    return fraises;
+}
+
+vector<Jeu::Fraise>& Jeu::getFraises() {
+    return fraises;
+}
+
 void Jeu::affiche(ostream& os) const {
     grille.affiche(population, os);
 
@@ -394,4 +406,9 @@ void Jeu::affiche(ostream& os) const {
     }    
 }
 
-
+void Jeu::reset() {
+    grille = Grille();
+    population = Population();
+    fraises.clear();
+    srand(time(nullptr));
+}
