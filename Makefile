@@ -16,5 +16,4 @@ sfml: sfml/sfml_main.cpp sfml/JeuSFML.cpp $(SRC)
 
 clean:
 	rm -f *.o main test sfml_sim
-	rm -f frames/grille*.ppm
-	rm -f animation.gif
+	rm -rf frames/grille*.ppm animation.gif

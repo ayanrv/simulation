@@ -89,10 +89,8 @@ void JeuSFML::renderLogo(RenderWindow& window) {
     float rightBlockWidth = window.getSize().x - (MARGIN + fieldWidth + MARGIN);
     float rightBlockX = MARGIN + fieldWidth;
 
-    // Центрируем по горизонтали в правом блоке
     float logoX = rightBlockX + (rightBlockWidth - logoWidth) / 2.f + 50.f;
 
-    // Смещение вверх относительно MARGIN
     float logoY = MARGIN - 135.f;
 
     logo.setPosition(logoX, logoY);
