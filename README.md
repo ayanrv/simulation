@@ -14,19 +14,30 @@ A C++ predator-prey simulation featuring foxes and rabbits, rendered via [SFML](
 - Designed for both Linux and Windows (via WSL/cross-compilation).
 
 ## 🗂️ Project Structure
-.
 ├── main.cpp # CLI Simulation (optional)
+
 ├── test.cpp # Unit tests using Doctest
+
 ├── sfml/ # SFML-based UI and interaction
+
 │ ├── sfml_main.cpp
+
 │ ├── Menu.cpp
+
 │ └── JeuSFML.cpp
+
 ├── coord.cpp # Coordinate and position logic
+
 ├── animal.cpp # Animal base logic
+
 ├── population.cpp # Population tracking and ID system
+
 ├── grille.cpp # Grid management for placing animals
+
 ├── jeu.cpp # Game logic and turn engine
+
 ├── export.cpp # Frame export and image generation
+
 └── Makefile # Build instructions
 
 
